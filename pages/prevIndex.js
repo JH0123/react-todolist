@@ -1,27 +1,15 @@
 import Link from "next/link";
 import { useState } from "react";
-import produce from "immer";
 
-interface Todo {
-  id: number;
-  content: string;
-  done: boolean;
-  isEditing: boolean;
-  editContent: string;
-  disabled: boolean;
-}
-
-export default function IndexPage() {
-  // const [isDisabled, setIsDisabled] = useState(false);
+export default function index() {
   const [userInput, setUserInput] = useState("");
-  const [todoList, setTodoList] = useState<Todo[]>([
+  const [todoList, setTodoList] = useState([
     {
       id: 0,
       content: "첫번째 할일",
       done: false,
       isEditing: false,
       editContent: "",
-      disabled: false,
     },
     {
       id: 1,
@@ -29,13 +17,9 @@ export default function IndexPage() {
       done: false,
       isEditing: false,
       editContent: "",
-      disabled: false,
     },
   ]);
-
   const [isChecked, setIsChecked] = useState(false); // 체크 여부
-
-  // const [disable, setDisable] = useState(false); // complete 클릭 여부
 
   const handleChange = (e) => {
     e.preventDefault(); // 어떤 이벤트를 명시적으로 처리하지 않는 경우, 해당 이벤트에 대한 사용자 에이전트의 기본 동작을 실행하지 않도록 한다
@@ -45,25 +29,13 @@ export default function IndexPage() {
   };
   const handleSubmit = (e) => {
     e.preventDefault();
-    setTodoList([
-      {
-        content: userInput,
-        id: Date.now(),
-        disabled: false,
-        done: false,
-        editContent: "",
-        isEditing: false,
-      },
-      ...todoList,
-    ]);
+    setTodoList([{ content: userInput, id: Date.now() }, ...todoList]);
     setUserInput("");
   };
-
   const handleDelete = (id) => {
     const updateArr = todoList.filter((todo) => todo.id !== id);
-    // filter는 주어진 함수 값이 통과하는 새로운 배열을 만든다
     // indexOf() 메서드는 호출한 string 객체에서 주어진 값과 일치하는 첫 번째 인덱스를 반환한다
-    // console.log(updateArr);
+    console.log(updateArr);
 
     setTodoList(updateArr);
   };
@@ -76,10 +48,11 @@ export default function IndexPage() {
     );
   };
 
-  // map()은 실행한 결과를 가지고 새로운 배열을 만든다
   // const handleChangeEdit = (e) => {
 
-  // Edit 버튼을 누르면 todo.isEditing을 true로 만들어 주면서 div 대신 input이 나오게 변경
+  // edit 버튼을 누르면 input박스로 바꾸고 옆에 submit버튼이 생기고 그 버튼을 누를 시 submit버튼은 사라지고 변경된 값으로 배열에 저장되게 만들기
+
+  // 그냥 저 list를 클릭하면 input으로 바뀌게 하고 edit을 누르면 수정이 되는 걸로
 
   const onClickEditButton = (id) => (e) => {
     setTodoList(
@@ -107,13 +80,16 @@ export default function IndexPage() {
     );
   };
 
-  // const handleComplete = (id) => (e) => {
-  //   e.preventDefault();
-  //   setIsDisabled(!isDisabled);
-  // };
+  //   const handleEdit = (idx) => {
 
-  // complete라는 버튼을 클릭하면 done이 true로 바뀌고 글자색을 회색으로 바꾸기
-  // edit 버튼 비활성화 or 없애기
+  //     const update = todoList.map((todo) => {
+
+  //       // idx == idxs ? idx  : todo
+  //      todo.idx == idx ? { ...idx, [todo.idx]: editValue } : todo
+  //     })
+
+  //     console.log(update)
+  // }
 
   return (
     <div>
@@ -121,9 +97,9 @@ export default function IndexPage() {
         Todo List
       </h1>
       <nav className="bg-gray-500 flex sm:justify-center space-x-4">
-        <Link href="/imgupload">
+        <Link href="/home">
           <button className="rounded-lg px-3 py-2 text-white font-medium hover:bg-slate-100 hover:text-slate-900">
-            Image Upload
+            Home
           </button>
         </Link>
       </nav>
@@ -143,7 +119,7 @@ export default function IndexPage() {
           Submit
         </button>
       </form>
-      <ul className="my-8 border transition-all duration-500 relative rounded p-2">
+      <ul className="my-8 border transition-all duration-500 relative rounded p-1">
         {todoList.length >= 1
           ? todoList.map((todo) =>
               todo.isEditing ? (
@@ -162,7 +138,7 @@ export default function IndexPage() {
                   </button>
                 </li>
               ) : (
-                <li key={todo.id} className="pt-4">
+                <li key={todo.id}>
                   <div className="form-check flex items-center justify-between">
                     <input type="checkbox" className="form-checkbox" />
                     {/* onChange input text값이 바뀔 때마다 발생하는 이벤트*/}
@@ -193,21 +169,12 @@ export default function IndexPage() {
                       </button>
 
                       <button
-                        className="rounded-full text-gray-100 px-3 py-1 bg-blue-500 hover:shadow-inner hover:bg-blue-700 transition-all duration-300
-                        disabled:text-white disabled:bg-gray-500"
+                        className="rounded-full text-gray-100 px-3 py-1 bg-blue-500 hover:shadow-inner hover:bg-blue-700 transition-all duration-300"
                         onClick={(e) => {
                           e.preventDefault;
                           alert("미션 완료!!");
-                          // handleComplete(todo.id);
-                          setTodoList(
-                            todoList.map((todo2) =>
-                              todo2.id === todo.id
-                                ? { ...todo2, done: true, disabled: true }
-                                : todo2
-                            )
-                          );
+                          handleDelete(todo.id);
                         }}
-                        disabled={todo.disabled}
                       >
                         Complete
                       </button>
