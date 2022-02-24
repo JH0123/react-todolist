@@ -14,13 +14,24 @@ interface Todo {
   disabled: boolean;
 }
 
+interface IData {
+  content: string;
+}
+
 export default function IndexPage() {
   const cn = classnames.bind(classnames); // bind를 하지 않으면 classnames 계속 붙여야 함, cn()로 감싸주고 string 표시와 쉼표로 이름을 구분하면 된다
-  const { register, handleSubmit } = useForm<Todo>();
-  const onSubmit: SubmitHandler<Todo> = (data) => {
-    console.log(data);
-  };
-  const [userInput, setUserInput] = useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<IData>();
+  // const onSubmit: SubmitHandler<Todo> = (data) => {
+  //   console.log(data);
+  // };
+  // const [userInput, setUserInput] = useState("");
+
   const [todoList, setTodoList] = useState<Todo[]>([
     {
       id: 0,
@@ -45,7 +56,7 @@ export default function IndexPage() {
   const handleChange = (e) => {
     e.preventDefault(); // 어떤 이벤트를 명시적으로 처리하지 않는 경우, 해당 이벤트에 대한 사용자 에이전트의 기본 동작을 실행하지 않도록 한다
     // 기본 동작 방지?
-    setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
+    // setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
   };
 
   // const handleSubmit = (e) => {
@@ -65,22 +76,30 @@ export default function IndexPage() {
   // };
 
   // content를 생성 후 그 생성한 content는 수정이 안됨
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setTodoList(
-  //     produce((draft) => {
-  //       draft.unshift({
-  //         content: userInput,
-  //         id: Date.now(),
-  //         disabled: false,
-  //         done: false,
-  //         editContent: "",
-  //         isEditing: false,
-  //       });
-  //     })
-  //   );
-  //   setUserInput("");
-  // };
+  const onSubmit = (data: IData) => {
+    // e.preventDefault();
+    const { content } = data;
+
+    // console.log({ content: watch("content") });
+    // console.log({ content: getValues("content") });
+
+    setTodoList(
+      produce((draft) => {
+        draft.unshift({
+          content,
+          id: Date.now(),
+          disabled: false,
+          done: false,
+          editContent: "",
+          isEditing: false,
+        });
+      })
+    );
+    // setUserInput("");
+    reset({
+      content: "",
+    });
+  };
 
   const handleDelete = (id) => {
     const updateArr = todoList.filter((todo) => todo.id !== id);
@@ -162,9 +181,9 @@ export default function IndexPage() {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M4 6h16M4 12h16M4 18h7"
                 />
               </svg>
@@ -185,9 +204,11 @@ export default function IndexPage() {
             </ul> */}
             <nav className="flex sm:justify-center space-x-4">
               <Link href="/imgupload">
-                <button className="rounded-lg px-3 py-2 font-medium hover:bg-slate-100 hover:text-slate-900">
-                  Image Upload
-                </button>
+                <a>
+                  <button className="rounded-lg px-3 py-2 font-medium hover:bg-slate-100 hover:text-slate-900">
+                    Image Upload
+                  </button>
+                </a>
               </Link>
             </nav>
           </div>
@@ -205,9 +226,9 @@ export default function IndexPage() {
               stroke="currentColor"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
@@ -222,9 +243,9 @@ export default function IndexPage() {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
@@ -234,19 +255,35 @@ export default function IndexPage() {
         </div>
       </div>
       <br />
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex gap-4">
         <input
-          className="input input-bordered input-primary w-full max-w-x bg-gray-200 mb-3 focus:bg-white"
+          className="input input-bordered input-primary w-full max-w-x mb-3"
           type="text"
           // value={userInput}
           // onChange={handleChange}
-          {...register("content")}
+          {...register("content", {
+            required: true,
+            pattern: /^[a-zA-Z0-9가-힣]{1,20}$/,
+          })}
           placeholder="Enter a todo item"
         />
-        {/* <button className="btn btn-accent float-right" onClick={handleSubmit}>
+        {errors.content && errors.content.type === "required" && (
+          <span>content를 입력해주세요!</span>
+        )}
+        {errors.content && errors.content.type === "pattern" && (
+          <span>content는 20자 이내로 입력해주세요!</span>
+        )}
+        {/* <button className="btn btn-accent" onClick={handleSubmit}>
           Submit
         </button> */}
-        <button className="btn btn-accent float-right">Submit</button>
+        <button
+          className={cn("btn", "btn-accent", {
+            "btn-disabled": watch("content") === "",
+            "bg-error": watch("content") === "",
+          })}
+        >
+          Submit
+        </button>
       </form>
       <ul className="my-20 border transition-all duration-500 relative rounded p-2">
         {todoList.length >= 1
@@ -254,15 +291,15 @@ export default function IndexPage() {
               todo.isEditing ? (
                 <li key={todo.id} className="flex">
                   <input
-                    // className="border-2 rounded-lg border-gray-200 w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                    // className="border-2 rounded-lg border-gray-200 w-full py-2 px-4 text-content-300 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
                     className="input input-bordered input-success w-full max-w-xs"
                     type="text"
                     value={todo.editContent}
                     onChange={onChangeEditContent(todo.id)}
                   />
                   <button
-                    // className="rounded text-gray-100 px-3 py-1 bg-green-500 hover:shadow-inner hover:bg-green-700 transition-all duration-300 float-right"
-                    className="rounded-full btn btn-accent float-right"
+                    // className="rounded text-gray-100 px-3 py-1 bg-green-500 hover:shadow-inner hover:bg-green-700 transition-all duration-300"
+                    className="rounded-full btn btn-accent"
                     onClick={onSubmitEdit(todo.id)}
                   >
                     수정하기
@@ -278,7 +315,7 @@ export default function IndexPage() {
                  </div> */}
                     <div
                       className={cn(
-                        "border-2 rounded-lg border-gray-200 w-full py-2 px-4 text-gray-700 leading-tight",
+                        "border-2 rounded-lg border-gray-200 w-full py-2 px-4 text-content-300 leading-tight",
                         {
                           "line-through": todo.disabled,
                         }
