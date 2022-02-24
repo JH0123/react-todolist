@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import produce from "immer";
-import { classnames, textColor, textDecoration } from "tailwindcss-classnames";
+import {
+  classnames,
+  content,
+  textColor,
+  textDecoration,
+} from "tailwindcss-classnames";
 import create from "zustand";
 import { SubmitHandler, useForm } from "react-hook-form";
 
@@ -13,14 +18,23 @@ interface Todo {
   editContent: string;
   disabled: boolean;
 }
+interface IData {
+  content: string;
+}
 
 export default function IndexPage() {
   const cn = classnames.bind(classnames); // bind를 하지 않으면 classnames 계속 붙여야 함, cn()로 감싸주고 string 표시와 쉼표로 이름을 구분하면 된다
-  const { register, handleSubmit } = useForm<Todo>();
-  const onSubmit: SubmitHandler<Todo> = (data) => {
-    console.log(data);
-  };
-  const [userInput, setUserInput] = useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<IData>();
+  // const [userInput, setUserInput] = useState("");
+
+  // const list = useStore((state) => state);
+
   const [todoList, setTodoList] = useState<Todo[]>([
     {
       id: 0,
@@ -40,12 +54,10 @@ export default function IndexPage() {
     },
   ]);
 
-  // const [isChecked, setIsChecked] = useState(false); // 체크 여부
-
   const handleChange = (e) => {
     e.preventDefault(); // 어떤 이벤트를 명시적으로 처리하지 않는 경우, 해당 이벤트에 대한 사용자 에이전트의 기본 동작을 실행하지 않도록 한다
     // 기본 동작 방지?
-    setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
+    // setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
   };
 
   // const handleSubmit = (e) => {
@@ -65,22 +77,22 @@ export default function IndexPage() {
   // };
 
   // content를 생성 후 그 생성한 content는 수정이 안됨
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setTodoList(
-  //     produce((draft) => {
-  //       draft.unshift({
-  //         content: userInput,
-  //         id: Date.now(),
-  //         disabled: false,
-  //         done: false,
-  //         editContent: "",
-  //         isEditing: false,
-  //       });
-  //     })
-  //   );
-  //   setUserInput("");
-  // };
+  const onSubmit = (data: IData) => {
+    const { content } = data;
+    setTodoList(
+      produce((draft) => {
+        draft.unshift({
+          content,
+          id: Date.now(),
+          disabled: false,
+          done: false,
+          editContent: "",
+          isEditing: false,
+        });
+      })
+    );
+    reset({ content: "" });
+  };
 
   const handleDelete = (id) => {
     const updateArr = todoList.filter((todo) => todo.id !== id);
@@ -110,12 +122,16 @@ export default function IndexPage() {
   const onClickEditButton = (id) => (e) => {
     setTodoList(
       todoList.map((todo) => {
-        if (todo.id === id) {
-          todo.isEditing = true;
-          todo.editContent = todo.content;
+        if (todo.id !== id) {
+          return todo;
         }
-
-        return todo;
+        // todo.isEditing = true;
+        // todo.editContent = todo.content;
+        return {
+          ...todo,
+          isEditing: true,
+          editContent: todo.content,
+        };
       })
     );
   };
@@ -124,11 +140,14 @@ export default function IndexPage() {
     e.preventDefault();
     setTodoList(
       todoList.map((todo) => {
-        if (todo.id === id) {
-          todo.isEditing = false;
-          todo.content = todo.editContent;
+        if (todo.id !== id) {
+          return todo;
         }
-        return todo;
+        return {
+          ...todo,
+          isEditing: false,
+          content: todo.editContent,
+        };
       })
     );
   };
@@ -162,9 +181,9 @@ export default function IndexPage() {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M4 6h16M4 12h16M4 18h7"
                 />
               </svg>
@@ -205,9 +224,9 @@ export default function IndexPage() {
               stroke="currentColor"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
@@ -222,9 +241,9 @@ export default function IndexPage() {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
@@ -240,12 +259,18 @@ export default function IndexPage() {
           type="text"
           // value={userInput}
           // onChange={handleChange}
-          {...register("content")}
+          {...register("content", {
+            required: true,
+            pattern: /^[a-zA-Z0-9가-힣]{1,20}$/,
+          })}
           placeholder="Enter a todo item"
         />
-        {/* <button className="btn btn-accent float-right" onClick={handleSubmit}>
-          Submit
-        </button> */}
+        {errors.content && errors.content.type === "required" && (
+          <span>content를 입력해주세요!</span>
+        )}
+        {errors.content && errors.content.type === "pattern" && (
+          <span>content는 20자 이내로 입력해주세요!</span>
+        )}
         <button className="btn btn-accent float-right">Submit</button>
       </form>
       <ul className="my-20 border transition-all duration-500 relative rounded p-2">
@@ -254,7 +279,6 @@ export default function IndexPage() {
               todo.isEditing ? (
                 <li key={todo.id} className="flex">
                   <input
-                    // className="border-2 rounded-lg border-gray-200 w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
                     className="input input-bordered input-success w-full max-w-xs"
                     type="text"
                     value={todo.editContent}
