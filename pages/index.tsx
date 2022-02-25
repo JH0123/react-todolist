@@ -1,14 +1,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import produce from "immer";
-import {
-  classnames,
-  content,
-  textColor,
-  textDecoration,
-} from "tailwindcss-classnames";
+import { classnames } from "tailwindcss-classnames";
 import create from "zustand";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 interface Todo {
   id: number;
@@ -28,7 +23,6 @@ export default function IndexPage() {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<IData>();
   // const [userInput, setUserInput] = useState("");
@@ -54,26 +48,10 @@ export default function IndexPage() {
     },
   ]);
 
-  const handleChange = (e) => {
-    e.preventDefault(); // 어떤 이벤트를 명시적으로 처리하지 않는 경우, 해당 이벤트에 대한 사용자 에이전트의 기본 동작을 실행하지 않도록 한다
-    // 기본 동작 방지?
-    // setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
-  };
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setTodoList([
-  //     {
-  //       content: userInput,
-  //       id: Date.now(),
-  //       disabled: false,
-  //       done: false,
-  //       editContent: "",
-  //       isEditing: false,
-  //     },
-  //     ...todoList,
-  //   ]);
-  //   setUserInput("");
+  // const handleChange = (e) => {
+  //   e.preventDefault(); // 어떤 이벤트를 명시적으로 처리하지 않는 경우, 해당 이벤트에 대한 사용자 에이전트의 기본 동작을 실행하지 않도록 한다
+  //   // 기본 동작 방지?
+  //   // setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
   // };
 
   // content를 생성 후 그 생성한 content는 수정이 안됨
@@ -99,76 +77,76 @@ export default function IndexPage() {
     setTodoList(updateArr);
   };
 
+  // const onChangeEditContent = (id) => (e) => {
+  //   setTodoList(
+  //     todoList.map((todo) =>
+  //       todo.id === id ? { ...todo, editContent: e.target.value } : todo
+  //     )
+  //   );
+  // };
+
   const onChangeEditContent = (id) => (e) => {
     setTodoList(
-      todoList.map((todo) =>
-        todo.id === id ? { ...todo, editContent: e.target.value } : todo
-      )
+      produce((draft) => {
+        const check = draft.find((todo) => todo.id === id);
+        check.editContent = e.target.value;
+      })
     );
   };
 
-  // edit이라는 버튼을 클릭하면 isEditing이 true로 바뀌고 editContent에 content의 내용이 들어가야한다
-
-  // const onChangeEditContent = (id) => (e) => {
+  // const onClickEditButton = (id) => (e) => {
   //   setTodoList(
-  //     produce((draft) => {
-  //       const edit = draft.find((todo) => todo.id === id);
-  //       const editContent = e.target.value;
-  //       edit.content = editContent;
+  //     todoList.map((todo) => {
+  //       if (todo.id !== id) {
+  //         return todo;
+  //       }
+  //       return {
+  //         ...todo,
+  //         isEditing: true,
+  //         editContent: todo.content,
+  //       };
   //     })
   //   );
   // };
 
   const onClickEditButton = (id) => (e) => {
     setTodoList(
-      todoList.map((todo) => {
-        if (todo.id !== id) {
-          return todo;
-        }
-        // todo.isEditing = true;
-        // todo.editContent = todo.content;
-        return {
-          ...todo,
-          isEditing: true,
-          editContent: todo.content,
-        };
+      produce((draft) => {
+        const check = draft.find((todo) => todo.id === id);
+        check.isEditing = true;
+        check.editContent = check.content;
       })
     );
   };
+
+  // const onSubmitEdit = (id) => (e) => {
+  //   e.preventDefault();
+  //   setTodoList(
+  //     todoList.map((todo) => {
+  //       if (todo.id !== id) {
+  //         return todo;
+  //       }
+  //       return {
+  //         ...todo,
+  //         isEditing: false,
+  //         content: todo.editContent,
+  //       };
+  //     })
+  //   );
+  // };
 
   const onSubmitEdit = (id) => (e) => {
-    e.preventDefault();
     setTodoList(
-      todoList.map((todo) => {
-        if (todo.id !== id) {
-          return todo;
-        }
-        return {
-          ...todo,
-          isEditing: false,
-          content: todo.editContent,
-        };
+      produce((draft) => {
+        const check = draft.find((todo) => todo.id === id);
+        check.isEditing = false;
+        check.content = check.editContent;
       })
     );
   };
-
-  // const handleComplete = (id) => (e) => {
-  //   e.preventDefault();
-  //   setIsDisabled(!isDisabled);
-  // };
 
   return (
     <div>
-      {/* <h1 className="bg-red-900 text-center text-white text-2xl py-4">
-        Todo List
-      </h1>
-      <nav className="bg-gray-500 flex sm:justify-center space-x-4">
-        <Link href="/imgupload">
-          <button className="rounded-lg px-3 py-2 text-white font-medium hover:bg-slate-100 hover:text-slate-900">
-            Image Upload
-          </button>
-        </Link>
-      </nav> */}
       <div className="navbar bg-base-100 mb-40 shadow-xl rounded-box">
         <div className="navbar-start">
           <div className="dropdown">
