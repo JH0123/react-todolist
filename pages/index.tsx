@@ -4,8 +4,12 @@ import produce from "immer";
 import { classnames } from "tailwindcss-classnames";
 import create from "zustand";
 import { useForm } from "react-hook-form";
+import useSWR from "swr";
+import fetch from "unfetch";
+import fetcher from "../lib/fetcher";
+// import URL from "./api/todos";
 
-interface Todo {
+export interface Todo {
   id: number;
   content: string;
   done: boolean;
@@ -13,9 +17,14 @@ interface Todo {
   editContent: string;
   disabled: boolean;
 }
-interface IData {
+
+export interface IData {
   content: string;
+  editContent: string;
+  done: boolean;
 }
+
+// const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 export default function IndexPage() {
   const cn = classnames.bind(classnames); // bind를 하지 않으면 classnames 계속 붙여야 함, cn()로 감싸주고 string 표시와 쉼표로 이름을 구분하면 된다
@@ -27,7 +36,14 @@ export default function IndexPage() {
   } = useForm<IData>();
   // const [userInput, setUserInput] = useState("");
 
-  // const list = useStore((state) => state);
+  // const { data, error } = useSWR("/api/todo", fetcher);
+  // if (error) {
+  //   return <div>error...</div>;
+  // }
+  // if (!data) {
+  //   return <div>loading...</div>;
+  // }
+  // return <div>{data.todo}</div>;
 
   const [todoList, setTodoList] = useState<Todo[]>([
     {
@@ -54,7 +70,6 @@ export default function IndexPage() {
   //   // setUserInput(e.target.value); // 객체에 담겨있는 값을 읽어온다
   // };
 
-  // content를 생성 후 그 생성한 content는 수정이 안됨
   const onSubmit = (data: IData) => {
     const { content } = data;
     setTodoList(
@@ -231,6 +246,7 @@ export default function IndexPage() {
         </div>
       </div>
       <br />
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <input
           className="input input-bordered input-primary w-full max-w-x bg-gray-200 mb-3 focus:bg-white"
@@ -251,6 +267,7 @@ export default function IndexPage() {
         )}
         <button className="btn btn-accent float-right">Submit</button>
       </form>
+
       <ul className="my-20 border transition-all duration-500 relative rounded p-2">
         {todoList.length >= 1
           ? todoList.map((todo) =>
